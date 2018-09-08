@@ -1,0 +1,1 @@
+typeSearchIndex = [{"p":"com.salvadanaio.grammatica","l":"GrammaticaMonete"},{"p":"com.salvadanaio.economia","l":"Moneta"},{"p":"com.salvadanaio","l":"Salvadanaio"},{"p":"com.salvadanaio.economia","l":"TestMoneta"},{"p":"com.salvadanaio","l":"TestSalvadanaio"}]
