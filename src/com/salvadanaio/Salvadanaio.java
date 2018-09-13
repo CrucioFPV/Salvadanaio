@@ -2,6 +2,7 @@
 package com.salvadanaio;
 
 import com.salvadanaio.economia.Moneta;
+import com.salvadanaio.exception.SalvadanaioPienoException;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -12,9 +13,14 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 class Salvadanaio {
 
-    @SuppressWarnings("FieldCanBeLocal")
+
     private final int LIMITE_MONETE = 10;
     private final Moneta[] monete = new Moneta[this.getLimiteMonete()];
+
+    public Salvadanaio() {
+        System.out.println("Creato portamonete vuoto!");
+    }
+
 
     /**
      * Crea un oggetto Salvadanaio contenente delle monete i cui valori sono contenuti nel varargs valori
@@ -22,42 +28,55 @@ class Salvadanaio {
      * @param valori Un varargs di valori Moneta
      */
     public Salvadanaio(int... valori) {
-        int numeroMonete = valori.length;
-
-        if (numeroMonete > 0) {
+        try {
+            int numeroMonete = valori.length;
             for (int index = 0; index < numeroMonete; index++) {
                 if (index >= this.getLimiteMonete()) {
-                    System.out.println("Sono state inserite sole le prime " +
+                    throw new SalvadanaioPienoException("Sono state inserite solo le prime " +
                             this.getLimiteMonete() + " monete");
-                    break;
                 }
                 getMonete()[index] = new Moneta(valori[index]);
             }
+        } catch (SalvadanaioPienoException exc) {
+            System.out.println(exc.getMessage());
+        } catch (NullPointerException exc) {
+            System.out.println("Porta monete creato vuoto!");
         }
     }
 
-    public Salvadanaio(Moneta... monete) {
-        int numeroMonete = monete.length;
 
-        if (numeroMonete > 0) {
+    public Salvadanaio(Moneta... monete) {
+
+
+        try {
+            int numeroMonete = monete.length;
             for (int index = 0; index < numeroMonete; index++) {
                 if (index >= this.getLimiteMonete()) {
-                    System.out.println("Sono state inserite sole le prime " +
+                    throw new SalvadanaioPienoException("Sono state inserite solo le prime " +
                             this.getLimiteMonete() + " monete");
-                    break;
                 }
                 getMonete()[index] = monete[index];
             }
+        } catch (SalvadanaioPienoException exc) {
+            System.out.println(exc.getMessage());
+        } catch (NullPointerException exc) {
+            System.out.println("Porta monete creato vuoto!");
         }
     }
 
     private static boolean isSalvadanaioPieno(@NotNull Salvadanaio salvadanaio) {
-        for (int index = 0; index < salvadanaio.getMonete().length; index++) {
-            if (salvadanaio.getMonete()[index] == null) {
-                return false;
+        try {
+            for (int index = 0; index < salvadanaio.getMonete().length; index++) {
+                if (salvadanaio.getMonete()[index] == null) {
+                    return false;
+                }
             }
+            return true;
+        } catch (NullPointerException exc) {
+            System.out.println("Salvadanaio impostato a null! Return True");
+            return true;
         }
-        return true;
+
     }
 
 
@@ -79,15 +98,23 @@ class Salvadanaio {
 
     /**
      * Metodo che aggiunge al salvadanaio una moneta. Se il salvadanaio risulta pieno, stampa un messaggio d'errore
+     *lanciando l'eccezione SalvadanaioPienoException
      *
      * @param moneta Moneta da aggiungere al salvadanaio
      */
     public void aggiungi(Moneta moneta) {
-        if (Salvadanaio.isSalvadanaioPieno(this)) {
-            System.out.println("Salvadanaio Pieno! Moneta non aggiunta!");
-        } else {
-            this.getMonete()[this.getSpazioLibero()] = moneta;
-            System.out.println("Moneta aggiunta!");
+        try {
+            if (Salvadanaio.isSalvadanaioPieno(this)) {
+                throw new SalvadanaioPienoException("Salvadanaio Pieno! Moneta non aggiunta!");
+            } else {
+                this.getMonete()[this.getSpazioLibero()] = moneta;
+                System.out.println("Moneta aggiunta!");
+            }
+        } catch (SalvadanaioPienoException exc) {
+            System.out.println(exc.getMessage());
+        } catch (NullPointerException exc) {
+            System.out.println("Passata una moneta null...moneta non aggiunta");
+            exc.printStackTrace();
         }
     }
 

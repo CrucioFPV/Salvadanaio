@@ -40,11 +40,11 @@ public class Moneta {
        la variabile isEuro a true
      */
     private void trasformaInEuro(){
-        if(this.getValore() >= 100){
-            this.setValore( ( this.getValore()) / 100 );
+        if (this.getValore() >= 100) {
+            this.setValore((this.getValore()) / 100);
             this.setIsEuro();
+            //  System.out.println("Trasformazione in euro: " + this.getValore());
         }
-        System.out.println("Trasformazione in euro: " + this.getValore());
     }
 
     /*

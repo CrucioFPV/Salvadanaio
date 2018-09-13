@@ -6,7 +6,7 @@ class TestSalvadanaio {
 
     public static void main(String[] args) {
 
-        Salvadanaio salvadanaio = new Salvadanaio(100, 1, 2, 2, 3, 4);
+        Salvadanaio salvadanaio = new Salvadanaio(1, 10000, 1, 122, 123124, 654356, 32, 1, 222, 3, 4, 55, 433);
         Moneta moneta1 = new Moneta(501);
         salvadanaio.aggiungi(moneta1);
         System.out.println("--------------------");
