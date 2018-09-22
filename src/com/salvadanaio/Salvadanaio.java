@@ -2,8 +2,13 @@
 package com.salvadanaio;
 
 import com.salvadanaio.economia.Moneta;
+import com.salvadanaio.exception.MonetaNotFoundException;
 import com.salvadanaio.exception.SalvadanaioPienoException;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Classe che astrae il concetto di Salvadanaio permettendo l'aggiunta di oggetti Moneta o la loro rimozione a Runtime
@@ -15,7 +20,7 @@ class Salvadanaio {
 
 
     private final int LIMITE_MONETE = 10;
-    private final Moneta[] monete = new Moneta[this.getLimiteMonete()];
+    private List<Moneta> monete = new ArrayList<>();
 
     public Salvadanaio() {
         System.out.println("Creato portamonete vuoto!");
@@ -29,13 +34,11 @@ class Salvadanaio {
      */
     public Salvadanaio(int... valori) {
         try {
+            //TODO: rendere il lancio eccezione riutilizzabile anche per l'altro costruttore
             int numeroMonete = valori.length;
             for (int index = 0; index < numeroMonete; index++) {
-                if (index >= this.getLimiteMonete()) {
-                    throw new SalvadanaioPienoException("Sono state inserite solo le prime " +
-                            this.getLimiteMonete() + " monete");
-                }
-                getMonete()[index] = new Moneta(valori[index]);
+                this.LaunchExceptionSalvadanaioPieno();
+                getMonete().add(new Moneta(valori[index]));
             }
         } catch (SalvadanaioPienoException exc) {
             System.out.println(exc.getMessage());
@@ -51,11 +54,8 @@ class Salvadanaio {
         try {
             int numeroMonete = monete.length;
             for (int index = 0; index < numeroMonete; index++) {
-                if (index >= this.getLimiteMonete()) {
-                    throw new SalvadanaioPienoException("Sono state inserite solo le prime " +
-                            this.getLimiteMonete() + " monete");
-                }
-                getMonete()[index] = monete[index];
+                LaunchExceptionSalvadanaioPieno();
+                getMonete().add(monete[index]);
             }
         } catch (SalvadanaioPienoException exc) {
             System.out.println(exc.getMessage());
@@ -66,12 +66,8 @@ class Salvadanaio {
 
     private static boolean isSalvadanaioPieno(@NotNull Salvadanaio salvadanaio) {
         try {
-            for (int index = 0; index < salvadanaio.getMonete().length; index++) {
-                if (salvadanaio.getMonete()[index] == null) {
-                    return false;
-                }
-            }
-            return true;
+            return salvadanaio.getMonete().size() == salvadanaio.LIMITE_MONETE;
+
         } catch (NullPointerException exc) {
             System.out.println("Salvadanaio impostato a null! Return True");
             return true;
@@ -88,12 +84,8 @@ class Salvadanaio {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private static boolean isSalvadanaioVuoto(@NotNull Salvadanaio salvadanaio) {
-        for (int index = 0; index < salvadanaio.getMonete().length; index++) {
-            if (salvadanaio.getMonete()[index] != null) {
-                return false;
-            }
-        }
-        return true;
+
+        return salvadanaio.getMonete().isEmpty();
     }
 
     /**
@@ -107,7 +99,7 @@ class Salvadanaio {
             if (Salvadanaio.isSalvadanaioPieno(this)) {
                 throw new SalvadanaioPienoException("Salvadanaio Pieno! Moneta non aggiunta!");
             } else {
-                this.getMonete()[this.getSpazioLibero()] = moneta;
+                this.getMonete().set(this.getSpazioLibero(), moneta);
                 System.out.println("Moneta aggiunta!");
             }
         } catch (SalvadanaioPienoException exc) {
@@ -124,17 +116,7 @@ class Salvadanaio {
      * @return Restituisce lo spazio vuoto nel salvadanaio
      */
     private int getSpazioLibero() {
-        int index = -1;
-
-        if (!(Salvadanaio.isSalvadanaioPieno(this))) {
-
-            for (index = 0; index < this.getMonete().length; index++) {
-                if (this.getMonete()[index] == null) {
-                    break;
-                }
-            }
-        }
-        return index;
+        return this.getMonete().indexOf(null);
     }
 
     /**
@@ -144,11 +126,11 @@ class Salvadanaio {
         int numeroMoneta = 0;
 
         if (!Salvadanaio.isSalvadanaioVuoto(this)) {
-            for (int index = 0; index < this.getMonete().length; index++) {
-                if (this.getMonete()[index] != null) {
+            for (int index = 0; index < this.getMonete().size(); index++) {
+                if (this.getMonete().get(index) != null) {
                     numeroMoneta++;
                     System.out.println(numeroMoneta + " - " +
-                            this.getMonete()[index].getDettagli());
+                            this.getMonete().get(index).getDettagli());
                 }
             }
         } else {
@@ -165,10 +147,11 @@ class Salvadanaio {
     public void rimuovi(int valore, boolean isEuro) {
 
         if (!Salvadanaio.isSalvadanaioVuoto(this)) {
-            if (isEuro) {
-                rimuoviEuro(valore);
-            } else {
-                rimuoviCentesimi(valore);
+            try {
+                if (isEuro) rimuoviEuro(valore);
+                else rimuoviCentesimi(valore);
+            } catch (MonetaNotFoundException exc) {
+                System.out.println(exc);
             }
         } else {
             System.out.println("Impossibile rimuovere monete: Salvadanaio Vuoto!");
@@ -176,21 +159,22 @@ class Salvadanaio {
 
     }
 
-    private void ErroreNonTrovato(boolean found) {
+    @Contract("false -> fail")
+    private void ErroreNonTrovato(boolean found) throws MonetaNotFoundException {
         if (!found) {
-            System.out.println("Moneta non trovata");
+            throw new MonetaNotFoundException("Moneta non trovata");
         }
     }
 
-    private void rimuoviCentesimi(int valore) {
+    private void rimuoviCentesimi(int valore) throws MonetaNotFoundException {
         boolean found = false;
-        for (int index = 0; index < this.getMonete().length; index++) {
-            if ((this.getMonete()[index] != null) &&
-                    (this.getMonete()[index].getValore() == valore &&
-                            !this.getMonete()[index].isEuro())) {
+        for (int index = 0; index < this.getMonete().size(); index++) {
+            if ((this.getMonete().get(index) != null) &&
+                    (this.getMonete().get(index).getValore() == valore &&
+                            !this.getMonete().get(index).isEuro())) {
 
                 found = true;
-                this.getMonete()[index] = null;
+                this.getMonete().remove(index);
                 break;
             }
         }
@@ -198,15 +182,15 @@ class Salvadanaio {
         this.ErroreNonTrovato(found);
     }
 
-    private void rimuoviEuro(int valore) {
+    private void rimuoviEuro(int valore) throws MonetaNotFoundException {
         boolean found = false;
-        for (int index = 0; index < this.getMonete().length; index++) {
-            if ((this.getMonete()[index] != null) &&
-                    (this.getMonete()[index].getValore() == valore &&
-                            this.getMonete()[index].isEuro())) {
+        for (int index = 0; index < this.getMonete().size(); index++) {
+            if ((this.getMonete().get(index) != null) &&
+                    (this.getMonete().get(index).getValore() == valore &&
+                            this.getMonete().get(index).isEuro())) {
 
                 found = true;
-                this.getMonete()[index] = null;
+                this.getMonete().remove(index);
                 break;
             }
         }
@@ -218,7 +202,14 @@ class Salvadanaio {
         return LIMITE_MONETE;
     }
 
-    private Moneta[] getMonete() {
+    private List<Moneta> getMonete() {
         return monete;
+    }
+
+    private void LaunchExceptionSalvadanaioPieno() throws SalvadanaioPienoException {
+        if (isSalvadanaioPieno(this)) {
+            throw new SalvadanaioPienoException("Sono state inserite solo le prime " +
+                    this.getLimiteMonete() + " monete");
+        }
     }
 }
